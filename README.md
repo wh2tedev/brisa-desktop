@@ -34,7 +34,7 @@ Ubuntu 24.04 ships Qt 6.4 and is not supported.
 Dependencies on Debian 13:
 
 ```sh
-sudo apt install build-essential cmake ninja-build pkg-config \
+sudo apt install build-essential libxkbcommon-dev cmake ninja-build pkg-config \
   qt6-base-dev qt6-declarative-dev qt6-declarative-dev-tools qt6-webengine-dev qt6-webengine-dev-tools \
   qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-templates \
   qml6-module-qtquick-window qml6-module-qtquick-shapes qml6-module-qtquick-dialogs qml6-module-qtwebengine \
