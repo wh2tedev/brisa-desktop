@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>brisa</id>
+  <name>Brisa</name>
+  <summary>A minimal, privacy-focused web browser</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <launchable type="desktop-id">brisa.desktop</launchable>
+  <description>
+    <p>Brisa is a small browser with no accounts, no analytics and no servers of its own. It blocks trackers and ads, tries HTTPS first and keeps your data on your device.</p>
+  </description>
+  <releases>
+    <release version="0.1.0" date="2026-10-27"/>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Brisa
+GenericName=Web Browser
+Comment=A minimal, privacy-focused web browser
+Exec=brisa
+Icon=brisa
+Terminal=false
+Categories=Network;WebBrowser;
+StartupWMClass=brisa

@@ -1,0 +1,77 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  QT_PACKAGES: >-
+    build-essential cmake ninja-build pkg-config git dpkg-dev file
+    qt6-base-dev qt6-declarative-dev qt6-declarative-dev-tools qt6-webengine-dev qt6-webengine-dev-tools
+    qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-templates
+    qml6-module-qtquick-window qml6-module-qtquick-shapes qml6-module-qtquick-dialogs qml6-module-qtwebengine
+    qml6-module-qtqml-workerscript libgl1-mesa-dri
+
+jobs:
+  core-tests:
+    name: Core tests (no Qt)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S . -B build -G Ninja -DBRISA_BUILD_APP=OFF
+      - run: cmake --build build
+      - run: ctest --test-dir build --output-on-failure
+
+  format:
+    name: Formatting
+    runs-on: ubuntu-latest
+    # Not blocking until the code has been through clang-format once (run `clang-format -i` on src and tests).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y clang-format
+      - run: find src tests -name '*.cpp' -o -name '*.h' | xargs clang-format --dry-run --Werror
+
+  app:
+    name: App (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+          - arch: x86_64
+            runner: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    # Qt 6.8 is needed, so build inside Debian 13 rather than on the Ubuntu 24.04 host (Qt 6.4).
+    container: debian:trixie
+    steps:
+      - name: Install dependencies
+        run: apt-get update && apt-get install -y --no-install-recommends $QT_PACKAGES
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+      - name: Lint QML
+        run: cmake --build build --target all_qmllint
+      - name: Start-up check
+        # Exit code 124 means the app was still running when the timeout hit, so the QML loaded.
+        run: |
+          export QT_QPA_PLATFORM=offscreen QTWEBENGINE_DISABLE_SANDBOX=1 QTWEBENGINE_CHROMIUM_FLAGS=--disable-gpu
+          set +e
+          timeout 20 build/src/app/brisa
+          status=$?
+          [ "$status" -eq 124 ] || { echo "brisa exited early with status $status"; exit 1; }
+      - name: Package
+        run: cmake -S . -B build -DBRISA_REQUIRE_ARM64=${{ matrix.arch == 'arm64' && 'ON' || 'OFF' }} && cd build && cpack
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brisa-deb-${{ matrix.arch }}
+          path: build/*.deb

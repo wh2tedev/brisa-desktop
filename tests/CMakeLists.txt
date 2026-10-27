@@ -1,0 +1,5 @@
+foreach(name urls domains blocklist)
+    add_executable(${name}_test ${name}_test.cpp)
+    target_link_libraries(${name}_test PRIVATE brisa_core)
+    add_test(NAME ${name} COMMAND ${name}_test)
+endforeach()
